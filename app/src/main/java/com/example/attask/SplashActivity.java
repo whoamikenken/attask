@@ -37,7 +37,7 @@ public class SplashActivity extends AppCompatActivity {
         }
 
         SharedPreferences sharedPreferences = getSharedPreferences("attasksession", Context.MODE_PRIVATE);
-        String userEmployeeid = sharedPreferences.getString("userEmployeeid", null);
+        String userEmployeeid = sharedPreferences.getString("employee_id", null);
 
         if (userEmployeeid == null) {
             new Handler().postDelayed(new Runnable() {

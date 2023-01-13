@@ -189,7 +189,10 @@ public class DetectorActivity extends CameraActivity implements ImageReader.OnIm
     void loadImage()
     {
         try {
-            URL url = new URL("https://kingsmanpower.s3.ap-southeast-1.amazonaws.com/user_profile/20181546-M.jpg");
+            SharedPreferences sharedPreferences = getSharedPreferences("attasksession", Context.MODE_PRIVATE);
+            String image = sharedPreferences.getString("image", null);
+//            "https://kingsmanpower.s3.ap-southeast-1.amazonaws.com/user_profile/20181546-M.jpg"
+            URL url = new URL(image);
             Bitmap imagebit = BitmapFactory.decodeStream(url.openConnection().getInputStream());
 
             FileOutputStream outputStream = null;
@@ -512,9 +515,6 @@ public class DetectorActivity extends CameraActivity implements ImageReader.OnIm
                 if (boundingBox != null && goodConfidence) {
                     // maps original coordinates to portrait coordinates
                     RectF faceBB = new RectF(boundingBox);
-                    Log.d("FAVALResultDDB",boundingBox.toString());
-                    Log.d("FAVALResultDDAA",String.valueOf(faceBB.left));
-                    Log.d("FAVALResultDDAA",String.valueOf(faceBB.bottom));
 
                     float sx = ((float) TF_OD_API_INPUT_SIZE) / faceBB.width();
                     float sy = ((float) TF_OD_API_INPUT_SIZE) / faceBB.height();
@@ -542,7 +542,7 @@ public class DetectorActivity extends CameraActivity implements ImageReader.OnIm
                     final long startTime = SystemClock.uptimeMillis();
                     final List<SimilarityClassifier.Recognition> resultsAux = detector.recognizeImage(faceBmp, add);
                     lastProcessingTimeMs = SystemClock.uptimeMillis() - startTime;
-
+                    Log.d("Score",String.valueOf(resultsAux.size()));
                     if (resultsAux.size() > 0) {
 
                         SimilarityClassifier.Recognition result = resultsAux.get(0);
@@ -550,7 +550,8 @@ public class DetectorActivity extends CameraActivity implements ImageReader.OnIm
                         extra = result.getExtra();
 
                         float conf = result.getDistance();
-                        if (conf <= 0.3f) {
+                        Log.d("Score",String.valueOf(conf));
+                        if (conf <= 0.5f) {
                             confidence = conf;
                             label = result.getTitle();
                             if (result.getId().equals("0")) {
@@ -739,8 +740,8 @@ public class DetectorActivity extends CameraActivity implements ImageReader.OnIm
 
         try {
 
-            SharedPreferences sharedPreferences = getSharedPreferences("hyperionSession", Context.MODE_PRIVATE);
-            String userEmployeeid = sharedPreferences.getString("userEmployeeid", null);
+            SharedPreferences sharedPreferences = getSharedPreferences("attasksession", Context.MODE_PRIVATE);
+            String userEmployeeid = sharedPreferences.getString("employeeid", null);
 
             /*initiate volley request*/
             RequestQueue requestQueue = Volley.newRequestQueue(this);
