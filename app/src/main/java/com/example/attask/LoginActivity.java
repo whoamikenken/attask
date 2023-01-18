@@ -73,7 +73,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
 
             /*initiate volley request*/
             RequestQueue requestQueue = Volley.newRequestQueue(this);
-            String backendURL = "http://192.168.1.10/api/login";
+            String backendURL = "http://192.168.1.2/api/login";
 
             JSONObject postData = new JSONObject();
             try {

@@ -1,8 +1,10 @@
 package com.example.attask;
 
+import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
@@ -13,6 +15,9 @@ import android.graphics.RectF;
 import android.graphics.Typeface;
 import android.graphics.drawable.BitmapDrawable;
 import android.hardware.camera2.CameraCharacteristics;
+import android.location.Criteria;
+import android.location.Location;
+import android.location.LocationManager;
 import android.media.ImageReader;
 import android.os.Bundle;
 import android.os.Environment;
@@ -24,6 +29,8 @@ import android.util.Size;
 import android.util.TypedValue;
 import android.widget.ImageView;
 import android.widget.Toast;
+
+import androidx.core.app.ActivityCompat;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
@@ -54,7 +61,12 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.Inet4Address;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
 import java.net.URL;
+import java.util.Enumeration;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -124,6 +136,8 @@ public class DetectorActivity extends CameraActivity implements ImageReader.OnIm
     private Integer validator = 0;
     private Integer smileVal = 0;
 
+    private Double Lat, Long;
+
     //private HashMap<String, Classifier.Recognition> knownFaces = new HashMap<>();
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -144,6 +158,24 @@ public class DetectorActivity extends CameraActivity implements ImageReader.OnIm
         StrictMode.setThreadPolicy(policy);
 
         loadImage();
+
+        LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        Criteria criteria = new Criteria();
+        String bestProvider = locationManager.getBestProvider(criteria, false);
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return;
+        }
+        Location location = locationManager.getLastKnownLocation(bestProvider);
+
+        Lat = location.getLatitude();
+        Long = location.getLongitude();
     }
 
     void loadImageFile(String name)
@@ -680,7 +712,7 @@ public class DetectorActivity extends CameraActivity implements ImageReader.OnIm
 
                         float conf = result.getDistance();
 
-                        if (conf < 0.6f) {
+                        if (conf < 0.8f) {
 
                             confidence = conf;
                             label = result.getTitle();
@@ -741,21 +773,22 @@ public class DetectorActivity extends CameraActivity implements ImageReader.OnIm
         try {
 
             SharedPreferences sharedPreferences = getSharedPreferences("attasksession", Context.MODE_PRIVATE);
-            String userEmployeeid = sharedPreferences.getString("employeeid", null);
+            String userEmployeeid = sharedPreferences.getString("employee_id", null);
 
             /*initiate volley request*/
             RequestQueue requestQueue = Volley.newRequestQueue(this);
-            String backendURL = "http://192.168.2.97/ptihris/index.php/Android_/test";
+            String backendURL = "http://192.168.1.2/api/logs";
 
             JSONObject postData = new JSONObject();
+            long timestampDevice = System.currentTimeMillis() / 1000;
             try {
-                postData.put("rememberPassword", false);
-                postData.put("ip_address", "1.41");
-                postData.put("isCaptchaEnabled", false);
-                postData.put("emp_id", "dwadw");
+                postData.put("employee_id", userEmployeeid);
+                postData.put("ip", getLocalIpAddress());
+                postData.put("location", Lat+","+Long);
+                postData.put("username", "Webcheckin");
+                postData.put("machine_type", "Android");
+                postData.put("time", timestampDevice);
                 postData.put("base_64", Base64.encodeToString(outputStream.toByteArray(), Base64.DEFAULT | Base64.NO_WRAP));
-//                Log.d("base64",Base64.encodeToString(outputStream.toByteArray(), Base64.URL_SAFE | Base64.NO_PADDING | Base64.NO_WRAP));
-
             } catch (JSONException e) {
                 e.printStackTrace();
             }
@@ -784,6 +817,23 @@ public class DetectorActivity extends CameraActivity implements ImageReader.OnIm
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public static String getLocalIpAddress() {
+        try {
+            for (Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces(); en.hasMoreElements();) {
+                NetworkInterface intf = en.nextElement();
+                for (Enumeration<InetAddress> enumIpAddr = intf.getInetAddresses(); enumIpAddr.hasMoreElements();) {
+                    InetAddress inetAddress = enumIpAddr.nextElement();
+                    if (!inetAddress.isLoopbackAddress() && inetAddress instanceof Inet4Address) {
+                        return inetAddress.getHostAddress();
+                    }
+                }
+            }
+        } catch (SocketException ex) {
+            ex.printStackTrace();
+        }
+        return null;
     }
 
     private class ErrorListener implements Response.ErrorListener{
