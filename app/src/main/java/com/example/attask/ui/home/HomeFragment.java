@@ -15,7 +15,7 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.example.attask.DetectorActivity;
-import com.example.attask.SubmitTask;
+import com.example.attask.WorkRequest;
 import com.example.attask.databinding.FragmentHomeBinding;
 import com.squareup.picasso.Picasso;
 
@@ -55,7 +55,7 @@ public class HomeFragment extends Fragment {
         submitTask.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                startActivity(new Intent(getActivity(), SubmitTask.class));
+                startActivity(new Intent(getActivity(), WorkRequest.class));
             }
         });
 

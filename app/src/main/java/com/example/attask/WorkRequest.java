@@ -1,11 +1,16 @@
 package com.example.attask;
 
+import android.app.DatePickerDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.Bundle;
+import android.util.Base64;
 import android.view.View;
 import android.widget.Button;
+import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.Toast;
 
@@ -17,63 +22,90 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
+import com.google.android.gms.common.util.IOUtils;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Locale;
+
 public class WorkRequest extends AppCompatActivity implements View.OnClickListener{
 
-    Button submit;
-    private EditText purpose, date, workdone;
+    private static final int PICK_FILE_REQUEST = 0xF0F0;
+    Button submit, uploadButton;
+    private EditText purpose, dateTxt, workdone;
+    private byte[] fileBytes;
+
+    final Calendar myCalendar= Calendar.getInstance();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_login);
-        login = findViewById(R.id.btn_login);
-        login.setOnClickListener(this);
-        username = findViewById(R.id.et_login_username);
-        pass = findViewById(R.id.et_login_password);
+        setContentView(R.layout.file_task);
+        uploadButton = findViewById(R.id.uploadFile);
+        uploadButton.setOnClickListener(this);
+
+        submit = findViewById(R.id.Submit);
+        submit.setOnClickListener(this);
+
+        purpose = findViewById(R.id.editTextPurpose);
+        workdone = findViewById(R.id.editTextTextWorkDone);
+        dateTxt = findViewById(R.id.editTextDate);
+
+        DatePickerDialog.OnDateSetListener date =new DatePickerDialog.OnDateSetListener() {
+            @Override
+            public void onDateSet(DatePicker view, int year, int month, int day) {
+                myCalendar.set(Calendar.YEAR, year);
+                myCalendar.set(Calendar.MONTH,month);
+                myCalendar.set(Calendar.DAY_OF_MONTH,day);
+                updateLabel();
+            }
+        };
+
+        dateTxt.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                new DatePickerDialog(WorkRequest.this,date,myCalendar.get(Calendar.YEAR),myCalendar.get(Calendar.MONTH),myCalendar.get(Calendar.DAY_OF_MONTH)).show();
+            }
+        });
 
     }
 
     @Override
     public void onClick(View v) {
         switch (v.getId()){
-            case R.id.btn_login:
-                validateUser();
+            case R.id.uploadFile:
+                uploadFile();
+                break;
+            case R.id.Submit:
+                submitData();
                 break;
         }
     }
 
-    private void validateUser() {
-        String Username = username.getText().toString().trim();
-        String Password = pass.getText().toString().trim();
-
-        if (Username.isEmpty()){
-            username.setError("Username is required!");
-            username.requestFocus();
-            Toast.makeText(WorkRequest.this, "Email Is Required", Toast.LENGTH_LONG).show();
-            return;
-        }
-
-        if (Password.isEmpty()){
-            pass.setError("Password is required!");
-            pass.requestFocus();
-            Toast.makeText(WorkRequest.this, "Password is required", Toast.LENGTH_LONG).show();
-            return;
-        }
-
+    private void submitData() {
         try {
+
+            SharedPreferences sharedPreferences = getSharedPreferences("attasksession", Context.MODE_PRIVATE);
+            String userEmployeeid = sharedPreferences.getString("employee_id", null);
 
             /*initiate volley request*/
             RequestQueue requestQueue = Volley.newRequestQueue(this);
-            String backendURL = "http://192.168.1.2/api/login";
+            String backendURL = "http://192.168.1.2/api/task";
 
             JSONObject postData = new JSONObject();
+            long timestampDevice = System.currentTimeMillis() / 1000;
             try {
-                postData.put("username", Username);
-                postData.put("password", Password);
+                postData.put("employee_id", userEmployeeid);
+                postData.put("purpose", purpose.getText());
+                postData.put("work_done", workdone.getText());
+                postData.put("date", dateTxt.getText());
+                postData.put("base_64", Base64.encodeToString(fileBytes, Base64.DEFAULT | Base64.NO_WRAP));
             } catch (JSONException e) {
                 e.printStackTrace();
             }
@@ -81,26 +113,6 @@ public class WorkRequest extends AppCompatActivity implements View.OnClickListen
             JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, backendURL, postData, new Response.Listener<JSONObject>() {
                 @Override
                 public void onResponse(JSONObject response) {
-                    try {
-                        String status = response.getString("status");
-                        String employee_id = response.getString("employee_id");
-                        String image = response.getString("image");
-                        String name = response.getString("name");
-
-                        if(status.equals("success")){
-
-                            saveSession(employee_id, image, name);
-                            Toast.makeText(WorkRequest.this, "Login Success", Toast.LENGTH_LONG).show();
-                            Intent returnBtn = new Intent(WorkRequest.this, MainActivity.class);
-                            startActivity(returnBtn);
-                            finish();
-                        }else{
-                            Toast.makeText(WorkRequest.this, "Wrong Credentials", Toast.LENGTH_LONG).show();
-                        }
-
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                    }
 
                 }
             }, new Response.ErrorListener() {
@@ -112,18 +124,47 @@ public class WorkRequest extends AppCompatActivity implements View.OnClickListen
 
             requestQueue.add(jsonObjectRequest);
 
+            Toast.makeText(this, "Task Request Submitted", Toast.LENGTH_LONG).show();
+
+            Intent returnBtn = new Intent(this,
+                    MainActivity.class);
+            startActivity(returnBtn);
+            finish();
+
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    private void saveSession(String employee_id, String image, String name) {
-        SharedPreferences sharedPreferences = getSharedPreferences("attasksession", Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedPreferences.edit();
+    private void updateLabel(){
+        String myFormat="MM-dd-yy";
+        SimpleDateFormat dateFormat=new SimpleDateFormat(myFormat, Locale.US);
+        dateTxt.setText(dateFormat.format(myCalendar.getTime()));
+    }
 
-        editor.putString("employee_id", employee_id);
-        editor.putString("image", image);
-        editor.putString("name", name);
-        editor.commit();
+    public void uploadFile() {
+        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+        //sets the select file to all types of files
+        intent.setType("*/*");
+        // Only get openable files
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        //starts new activity to select file and return data
+        startActivityForResult(Intent.createChooser(intent,
+                "Choose File to Upload.."),PICK_FILE_REQUEST);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == PICK_FILE_REQUEST && resultCode == RESULT_OK && data != null && data.getData() != null) {
+            Uri fileUri = data.getData();
+            try {
+                InputStream inputStream = getContentResolver().openInputStream(fileUri);
+                fileBytes = IOUtils.toByteArray(inputStream);
+                // ...
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 }
