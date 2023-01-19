@@ -157,8 +157,7 @@ public class DetectorActivity extends CameraActivity implements ImageReader.OnIm
         StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
         StrictMode.setThreadPolicy(policy);
 
-        loadImage();
-
+        loadImageFile("user");
         LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         Criteria criteria = new Criteria();
         String bestProvider = locationManager.getBestProvider(criteria, false);
@@ -215,46 +214,6 @@ public class DetectorActivity extends CameraActivity implements ImageReader.OnIm
         {
             Log.d("FAVALResult",e.toString());
 
-        }
-    }
-
-    void loadImage()
-    {
-        try {
-            SharedPreferences sharedPreferences = getSharedPreferences("attasksession", Context.MODE_PRIVATE);
-            String image = sharedPreferences.getString("image", null);
-//            "https://kingsmanpower.s3.ap-southeast-1.amazonaws.com/user_profile/20181546-M.jpg"
-            URL url = new URL(image);
-            Bitmap imagebit = BitmapFactory.decodeStream(url.openConnection().getInputStream());
-
-            FileOutputStream outputStream = null;
-            File file = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
-            File dir = new File(file.getAbsolutePath() + "/Face_Pics");
-            dir.mkdirs();
-
-            String filename = String.format( loadImageName+ ".jpg");
-            File outFile = new File(dir, filename);
-            try {
-                outputStream = new FileOutputStream(outFile);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            imagebit.compress(Bitmap.CompressFormat.JPEG, 100, outputStream);
-            try {
-                outputStream.flush();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            try {
-                outputStream.close();
-                loadImageFile(loadImageName);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-        catch (Exception e)
-        {
-            Log.d("FAVALResultdawdawzcszs",e.toString());
         }
     }
 
