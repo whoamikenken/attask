@@ -73,7 +73,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
 
             /*initiate volley request*/
             RequestQueue requestQueue = Volley.newRequestQueue(this);
-            String backendURL = "https://earist-hr.herokuapp.com/api/login";
+            String backendURL = "http://at-task.herokuapp.com/api/login";
 
             JSONObject postData = new JSONObject();
             try {

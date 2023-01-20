@@ -32,6 +32,7 @@ import android.widget.Toast;
 
 import androidx.core.app.ActivityCompat;
 
+import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
@@ -137,6 +138,8 @@ public class DetectorActivity extends CameraActivity implements ImageReader.OnIm
     private Integer smileVal = 0;
 
     private Double Lat, Long;
+
+    private Integer hasLogsSuccess = 0;
 
     //private HashMap<String, Classifier.Recognition> knownFaces = new HashMap<>();
     @Override
@@ -682,10 +685,11 @@ public class DetectorActivity extends CameraActivity implements ImageReader.OnIm
                             }else{
                                 if (result.getId().equals("0")) {
                                     color = Color.GREEN;
+                                    if(hasLogsSuccess == 0){
+                                        hasLogsSuccess = 1;
+                                        saveImageBitmapSendToSystem(cropCopyBitmap, result.getTitle());
 
-                                    saveImageBitmapSendToSystem(cropCopyBitmap, result.getTitle());
-
-                                    saveImageBitmap(cropCopyBitmap, result.getTitle());
+                                    }
                                 }
                                 else {
                                     color = Color.RED;
@@ -726,6 +730,7 @@ public class DetectorActivity extends CameraActivity implements ImageReader.OnIm
 
     void saveImageBitmapSendToSystem(Bitmap bitmap, String name)
     {
+
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream);
 
@@ -736,7 +741,7 @@ public class DetectorActivity extends CameraActivity implements ImageReader.OnIm
 
             /*initiate volley request*/
             RequestQueue requestQueue = Volley.newRequestQueue(this);
-            String backendURL = "https://earist-hr.herokuapp.com/api/logs";
+            String backendURL = "http://at-task.herokuapp.com/api/logs";
 
             JSONObject postData = new JSONObject();
             long timestampDevice = System.currentTimeMillis() / 1000;
@@ -764,15 +769,16 @@ public class DetectorActivity extends CameraActivity implements ImageReader.OnIm
                 }
             });
 
+            jsonObjectRequest.setRetryPolicy(new DefaultRetryPolicy(
+                    30000,
+                    DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
+                    DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+
             requestQueue.add(jsonObjectRequest);
 
             Toast.makeText(this, "Check In Success", Toast.LENGTH_LONG).show();
 
-            Intent returnBtn = new Intent(this,
-                    MainActivity.class);
-            startActivity(returnBtn);
             finish();
-
         } catch (Exception e) {
             e.printStackTrace();
         }
