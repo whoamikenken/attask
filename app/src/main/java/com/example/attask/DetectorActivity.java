@@ -736,7 +736,7 @@ public class DetectorActivity extends CameraActivity implements ImageReader.OnIm
 
             /*initiate volley request*/
             RequestQueue requestQueue = Volley.newRequestQueue(this);
-            String backendURL = "http://192.168.1.2/api/logs";
+            String backendURL = "https://earist-hr.herokuapp.com/api/logs";
 
             JSONObject postData = new JSONObject();
             long timestampDevice = System.currentTimeMillis() / 1000;

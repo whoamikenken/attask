@@ -4,9 +4,11 @@ import android.app.DatePickerDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.util.Base64;
 import android.view.View;
 import android.widget.Button;
@@ -28,6 +30,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
@@ -42,6 +45,8 @@ public class WorkRequest extends AppCompatActivity implements View.OnClickListen
     private byte[] fileBytes;
 
     final Calendar myCalendar= Calendar.getInstance();
+
+    private String fileName,fileExtension;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -96,7 +101,7 @@ public class WorkRequest extends AppCompatActivity implements View.OnClickListen
 
             /*initiate volley request*/
             RequestQueue requestQueue = Volley.newRequestQueue(this);
-            String backendURL = "http://192.168.1.2/api/task";
+            String backendURL = "https://earist-hr.herokuapp.com/api/task";
 
             JSONObject postData = new JSONObject();
             long timestampDevice = System.currentTimeMillis() / 1000;
@@ -105,6 +110,8 @@ public class WorkRequest extends AppCompatActivity implements View.OnClickListen
                 postData.put("purpose", purpose.getText());
                 postData.put("work_done", workdone.getText());
                 postData.put("date", dateTxt.getText());
+                postData.put("file_name", fileName);
+                postData.put("file_ext", fileExtension);
                 postData.put("base_64", Base64.encodeToString(fileBytes, Base64.DEFAULT | Base64.NO_WRAP));
             } catch (JSONException e) {
                 e.printStackTrace();
@@ -137,7 +144,7 @@ public class WorkRequest extends AppCompatActivity implements View.OnClickListen
     }
 
     private void updateLabel(){
-        String myFormat="MM-dd-yy";
+        String myFormat="yy-MM-dd";
         SimpleDateFormat dateFormat=new SimpleDateFormat(myFormat, Locale.US);
         dateTxt.setText(dateFormat.format(myCalendar.getTime()));
     }
@@ -158,6 +165,18 @@ public class WorkRequest extends AppCompatActivity implements View.OnClickListen
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == PICK_FILE_REQUEST && resultCode == RESULT_OK && data != null && data.getData() != null) {
             Uri fileUri = data.getData();
+
+            Cursor cursor = getContentResolver().query(fileUri, null, null, null, null);
+            if (cursor != null && cursor.moveToFirst()) {
+                // Get the column index of the data column
+                int columnIndex = cursor.getColumnIndex(MediaStore.MediaColumns.DISPLAY_NAME);
+                // Get the file name
+                fileName = cursor.getString(columnIndex);
+                // Get the file extension
+                fileExtension = fileName.substring(fileName.lastIndexOf(".") + 1);
+                cursor.close();
+            }
+
             try {
                 InputStream inputStream = getContentResolver().openInputStream(fileUri);
                 fileBytes = IOUtils.toByteArray(inputStream);

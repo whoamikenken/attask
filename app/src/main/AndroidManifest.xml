@@ -67,6 +67,16 @@
                 android:value=""
                 android:screenOrientation="portrait"/>
         </activity>
+
+        <activity
+            android:name=".WorkRequest"
+            android:exported="true"
+            android:theme="@style/AppTheme.NoActionBar">
+            <meta-data
+                android:name="android.app.lib_name"
+                android:value=""
+                android:screenOrientation="portrait"/>
+        </activity>
     </application>
 
 </manifest>
