@@ -6,6 +6,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.StrictMode;
 import android.util.Log;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
@@ -33,7 +34,8 @@ public class MainActivity extends AppCompatActivity {
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
-        loadImage();
+        StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
+        StrictMode.setThreadPolicy(policy);
 
         BottomNavigationView navView = findViewById(R.id.nav_view);
         // Passing each menu ID as a set of Ids because each
@@ -44,6 +46,8 @@ public class MainActivity extends AppCompatActivity {
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_activity_main);
 //        NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
         NavigationUI.setupWithNavController(binding.navView, navController);
+
+        loadImage();
     }
 
     void loadImage()
@@ -51,13 +55,12 @@ public class MainActivity extends AppCompatActivity {
         try {
             SharedPreferences sharedPreferences = getSharedPreferences("attasksession", Context.MODE_PRIVATE);
             String image = sharedPreferences.getString("image", null);
-//            "https://kingsmanpower.s3.ap-southeast-1.amazonaws.com/user_profile/20181546-M.jpg"
             URL url = new URL(image);
             Bitmap imagebit = BitmapFactory.decodeStream(url.openConnection().getInputStream());
 
             FileOutputStream outputStream = null;
             File file = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
-            File dir = new File(file.getAbsolutePath() + "/Face_Pics");
+            File dir = new File(file.getAbsolutePath() + "/face");
             dir.mkdirs();
 
             String filename = String.format("user.jpg");
@@ -82,7 +85,7 @@ public class MainActivity extends AppCompatActivity {
         }
         catch (Exception e)
         {
-            Log.d("FAVALResultdawdawzcszs",e.toString());
+            Log.d("FAVALResultFile",e.toString());
         }
     }
 

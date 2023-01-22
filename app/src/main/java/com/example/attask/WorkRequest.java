@@ -9,6 +9,7 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.text.TextUtils;
 import android.util.Base64;
 import android.view.View;
 import android.widget.Button;
@@ -81,7 +82,6 @@ public class WorkRequest extends AppCompatActivity implements View.OnClickListen
         });
 
     }
-
     @Override
     public void onClick(View v) {
         switch (v.getId()){
@@ -95,6 +95,26 @@ public class WorkRequest extends AppCompatActivity implements View.OnClickListen
     }
 
     private void submitData() {
+        if (TextUtils.isEmpty(purpose.getText().toString())){
+            Toast.makeText(WorkRequest.this, "Purpose is required", Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        if (TextUtils.isEmpty(dateTxt.getText().toString())){
+            Toast.makeText(WorkRequest.this, "Date is required", Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        if (TextUtils.isEmpty(workdone.getText().toString())){
+            Toast.makeText(WorkRequest.this, "Work Done is required", Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        if (TextUtils.isEmpty(fileName)){
+            Toast.makeText(WorkRequest.this, "Please Upload A File", Toast.LENGTH_LONG).show();
+            return;
+        }
+
         try {
 
             SharedPreferences sharedPreferences = getSharedPreferences("attasksession", Context.MODE_PRIVATE);

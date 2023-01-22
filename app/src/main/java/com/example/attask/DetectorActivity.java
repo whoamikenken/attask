@@ -183,7 +183,7 @@ public class DetectorActivity extends CameraActivity implements ImageReader.OnIm
     void loadImageFile(String name)
     {
         try {
-            File imgFile = new File("/storage/emulated/0/Pictures/Face_Pics/"+name+".jpg");
+            File imgFile = new File("/storage/emulated/0/Pictures/face/"+name+".jpg");
             Bitmap bmp = BitmapFactory.decodeFile(imgFile.getAbsolutePath());
             InputImage image = InputImage.fromBitmap(bmp, 0);
 
