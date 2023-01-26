@@ -174,10 +174,21 @@ public class DetectorActivity extends CameraActivity implements ImageReader.OnIm
             // for ActivityCompat#requestPermissions for more details.
             return;
         }
+        locationManager = (LocationManager)  this.getSystemService(Context.LOCATION_SERVICE);
+        criteria = new Criteria();
+        bestProvider = String.valueOf(locationManager.getBestProvider(criteria, true)).toString();
+
+        //You can still do this if you like, you might get lucky:
         Location location = locationManager.getLastKnownLocation(bestProvider);
 
-        Lat = location.getLatitude();
-        Long = location.getLongitude();
+        if (location != null) {
+            Lat = location.getLatitude();
+            Long = location.getLongitude();
+        }else{
+            //This is what you need:
+//            locationManager.requestLocationUpdates(bestProvider, 1000, 0, this);
+        }
+
     }
 
     void loadImageFile(String name)
@@ -681,7 +692,7 @@ public class DetectorActivity extends CameraActivity implements ImageReader.OnIm
 
                             if(validator < 1){
                                 color = Color.YELLOW;
-                                label = result.getTitle() + " SMILE!";
+                                label = "PLEASE SMILE!";
                             }else{
                                 if (result.getId().equals("0")) {
                                     color = Color.GREEN;
