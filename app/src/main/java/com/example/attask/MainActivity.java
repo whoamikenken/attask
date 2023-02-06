@@ -26,6 +26,7 @@ import java.net.URL;
 public class MainActivity extends AppCompatActivity {
 
     private ActivityMainBinding binding;
+    private LocationHelper locationHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,6 +49,7 @@ public class MainActivity extends AppCompatActivity {
         NavigationUI.setupWithNavController(binding.navView, navController);
 
         loadImage();
+
     }
 
     void loadImage()

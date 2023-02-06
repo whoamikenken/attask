@@ -1,8 +1,8 @@
 package com.example.attask;
 
 import android.Manifest;
+import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
@@ -15,7 +15,6 @@ import android.graphics.RectF;
 import android.graphics.Typeface;
 import android.graphics.drawable.BitmapDrawable;
 import android.hardware.camera2.CameraCharacteristics;
-import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationManager;
 import android.media.ImageReader;
@@ -31,6 +30,7 @@ import android.widget.ImageView;
 import android.widget.Toast;
 
 import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.Request;
@@ -46,6 +46,7 @@ import com.example.attask.env.Logger;
 import com.example.attask.tflite.SimilarityClassifier;
 import com.example.attask.tflite.TFLiteObjectDetectionAPIModel;
 import com.example.attask.tracking.MultiBoxTracker;
+import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.mlkit.vision.common.InputImage;
@@ -53,6 +54,7 @@ import com.google.mlkit.vision.face.Face;
 import com.google.mlkit.vision.face.FaceDetection;
 import com.google.mlkit.vision.face.FaceDetector;
 import com.google.mlkit.vision.face.FaceDetectorOptions;
+import com.google.protobuf.StringValue;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -66,7 +68,6 @@ import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
-import java.net.URL;
 import java.util.Enumeration;
 import java.util.LinkedList;
 import java.util.List;
@@ -141,6 +142,10 @@ public class DetectorActivity extends CameraActivity implements ImageReader.OnIm
 
     private Integer hasLogsSuccess = 0;
 
+    private LocationHelper mLocationHelper;
+
+    private Boolean isInWorkPara = false;
+
     //private HashMap<String, Classifier.Recognition> knownFaces = new HashMap<>();
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -161,34 +166,33 @@ public class DetectorActivity extends CameraActivity implements ImageReader.OnIm
         StrictMode.setThreadPolicy(policy);
 
         loadImageFile("user");
-        LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-        Criteria criteria = new Criteria();
-        String bestProvider = locationManager.getBestProvider(criteria, false);
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            return;
-        }
-        locationManager = (LocationManager)  this.getSystemService(Context.LOCATION_SERVICE);
-        criteria = new Criteria();
-        bestProvider = String.valueOf(locationManager.getBestProvider(criteria, true)).toString();
 
-        //You can still do this if you like, you might get lucky:
-        Location location = locationManager.getLastKnownLocation(bestProvider);
-
+        mLocationHelper = new LocationHelper(this);
+        Location location = mLocationHelper.getCurrentLocation();
         if (location != null) {
             Lat = location.getLatitude();
             Long = location.getLongitude();
-        }else{
-            //This is what you need:
-//            locationManager.requestLocationUpdates(bestProvider, 1000, 0, this);
         }
 
+        Location targetLocation = new Location("");
+        targetLocation.setLatitude(14.6357134);
+        targetLocation.setLongitude(120.9815727);
+
+        float distance = location.distanceTo(targetLocation);
+        if (distance <= 1609.34) {
+            // User is within 1 mile of target location
+            // Notify the user
+            isInWorkPara = true;
+            Toast toast =
+                    Toast.makeText(
+                            getApplicationContext(), "In Wokr", Toast.LENGTH_SHORT);
+            toast.show();
+        }else{
+            Toast toast =
+                    Toast.makeText(
+                            getApplicationContext(), "In Work None", Toast.LENGTH_SHORT);
+            toast.show();
+        }
     }
 
     void loadImageFile(String name)
