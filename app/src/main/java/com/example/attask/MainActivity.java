@@ -4,10 +4,12 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.location.Location;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.StrictMode;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
@@ -26,7 +28,9 @@ import java.net.URL;
 public class MainActivity extends AppCompatActivity {
 
     private ActivityMainBinding binding;
-    private LocationHelper locationHelper;
+    private LocationHelper mLocationHelper;
+
+    private Double Lat, Long;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,6 +53,30 @@ public class MainActivity extends AppCompatActivity {
         NavigationUI.setupWithNavController(binding.navView, navController);
 
         loadImage();
+
+        mLocationHelper = new LocationHelper(this);
+        Location location = mLocationHelper.getCurrentLocation();
+        if (location != null) {
+            Lat = location.getLatitude();
+            Long = location.getLongitude();
+        }
+        SharedPreferences sharedPreferences = getSharedPreferences("attasksession", Context.MODE_PRIVATE);
+        String paraLat = sharedPreferences.getString("latitude", null);
+        String paraLong = sharedPreferences.getString("longitude", null);
+
+        Location targetLocation = new Location("");
+        targetLocation.setLatitude(Double.parseDouble(paraLat));
+        targetLocation.setLongitude(Double.parseDouble(paraLong));
+
+        float distance = location.distanceTo(targetLocation);
+        if (distance <= 1609.34) {
+            // User is within 1 mile of target location
+        }else{
+            Toast toast =
+                    Toast.makeText(
+                            getApplicationContext(), "You're not within work location", Toast.LENGTH_SHORT);
+            toast.show();
+        }
 
     }
 

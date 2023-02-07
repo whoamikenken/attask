@@ -173,25 +173,24 @@ public class DetectorActivity extends CameraActivity implements ImageReader.OnIm
             Lat = location.getLatitude();
             Long = location.getLongitude();
         }
+        SharedPreferences sharedPreferences = getSharedPreferences("attasksession", Context.MODE_PRIVATE);
+        String paraLat = sharedPreferences.getString("latitude", null);
+        String paraLong = sharedPreferences.getString("longitude", null);
 
         Location targetLocation = new Location("");
-        targetLocation.setLatitude(14.6357134);
-        targetLocation.setLongitude(120.9815727);
+        targetLocation.setLatitude(Double.parseDouble(paraLat));
+        targetLocation.setLongitude(Double.parseDouble(paraLong));
 
         float distance = location.distanceTo(targetLocation);
         if (distance <= 1609.34) {
             // User is within 1 mile of target location
-            // Notify the user
             isInWorkPara = true;
-            Toast toast =
-                    Toast.makeText(
-                            getApplicationContext(), "In Wokr", Toast.LENGTH_SHORT);
-            toast.show();
         }else{
             Toast toast =
                     Toast.makeText(
-                            getApplicationContext(), "In Work None", Toast.LENGTH_SHORT);
+                            getApplicationContext(), "You're not within work location", Toast.LENGTH_SHORT);
             toast.show();
+            finish();
         }
     }
 
@@ -203,6 +202,44 @@ public class DetectorActivity extends CameraActivity implements ImageReader.OnIm
             InputImage image = InputImage.fromBitmap(bmp, 0);
 
             Bitmap finalBmp = bmp;
+            faceDetector
+                    .process(image)
+                    .addOnSuccessListener(new OnSuccessListener<List<Face>>() {
+                        @Override
+                        public void onSuccess(List<Face> faces) {
+                            ++timestamp;
+                            final long currTimestamp = timestamp;
+                            if (faces.size() == 0)
+                            {
+                                //updateResults(currTimestamp, new LinkedList<>());
+                                Log.d("FAVALResult","Face Size 0");
+                                return;
+                            }
+                            runInBackground(
+                                    new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            onFacesDetected(currTimestamp, faces, true, true, finalBmp);
+                                            addPending = false;
+                                        }
+                                    });
+
+                        }
+                    });
+        }
+        catch (Exception e)
+        {
+            Log.d("FAVALResult",e.toString());
+
+        }
+    }
+
+    void RetrainCaptureFace(Bitmap captureImage)
+    {
+        try {
+            InputImage image = InputImage.fromBitmap(captureImage, 0);
+
+            Bitmap finalBmp = captureImage;
             faceDetector
                     .process(image)
                     .addOnSuccessListener(new OnSuccessListener<List<Face>>() {
@@ -703,7 +740,8 @@ public class DetectorActivity extends CameraActivity implements ImageReader.OnIm
                                     if(hasLogsSuccess == 0){
                                         hasLogsSuccess = 1;
                                         saveImageBitmapSendToSystem(cropCopyBitmap, result.getTitle());
-
+//                                        Train Model To Capture Image For continues learning
+                                        RetrainCaptureFace(cropCopyBitmap);
                                     }
                                 }
                                 else {
@@ -783,12 +821,10 @@ public class DetectorActivity extends CameraActivity implements ImageReader.OnIm
                     error.printStackTrace();
                 }
             });
-
             jsonObjectRequest.setRetryPolicy(new DefaultRetryPolicy(
                     30000,
                     DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
                     DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
-
             requestQueue.add(jsonObjectRequest);
 
             Toast.makeText(this, "Check In Success", Toast.LENGTH_LONG).show();

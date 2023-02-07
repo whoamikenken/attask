@@ -91,10 +91,12 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                         String employee_id = response.getString("employee_id");
                         String image = response.getString("image");
                         String name = response.getString("name");
+                        String latitude = response.getString("latitude");
+                        String longitude = response.getString("longitude");
 
                         if(status.equals("success")){
 
-                            saveSession(employee_id, image, name);
+                            saveSession(employee_id, image, name, latitude, longitude);
                             Toast.makeText(LoginActivity.this, "Login Success", Toast.LENGTH_LONG).show();
                             Intent returnBtn = new Intent(LoginActivity.this, MainActivity.class);
                             startActivity(returnBtn);
@@ -122,13 +124,15 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         }
     }
 
-    private void saveSession(String employee_id, String image, String name) {
+    private void saveSession(String employee_id, String image, String name, String latitude, String longitude) {
         SharedPreferences sharedPreferences = getSharedPreferences("attasksession", Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
 
         editor.putString("employee_id", employee_id);
         editor.putString("image", image);
         editor.putString("name", name);
+        editor.putString("latitude", latitude);
+        editor.putString("longitude", longitude);
         editor.commit();
     }
 }
