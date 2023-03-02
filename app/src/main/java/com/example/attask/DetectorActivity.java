@@ -2,6 +2,8 @@ package com.example.attask;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -77,6 +79,8 @@ import java.util.List;
 
 public class DetectorActivity extends CameraActivity implements ImageReader.OnImageAvailableListener {
     private static final Logger LOGGER = new Logger();
+
+    private static final String CHANNEL_ID = "r21421124";
 
     OutputStream outputStream;
     // MobileFaceNet
@@ -821,26 +825,45 @@ public class DetectorActivity extends CameraActivity implements ImageReader.OnIm
 
                         if(status.equals("success")){
                             Toast.makeText(DetectorActivity.this, "Check "+log_type+" Success", Toast.LENGTH_LONG).show();
-                            NotificationCompat.Builder builder = new NotificationCompat.Builder(DetectorActivity.this)
+                            // Create a notification channel object
+                            NotificationChannel channel = new NotificationChannel(CHANNEL_ID, "Channel Name", NotificationManager.IMPORTANCE_DEFAULT);
+                            channel.setDescription("Channel Description");
+
+                            // Create a notification builder object
+                            NotificationCompat.Builder builder = new NotificationCompat.Builder(DetectorActivity.this, CHANNEL_ID)
                                     .setSmallIcon(R.drawable.logo)
                                     .setContentTitle("Success!")
                                     .setContentText("Check "+log_type+" Success")
                                     .setPriority(NotificationCompat.PRIORITY_DEFAULT);
 
-                            NotificationManagerCompat notificationManager = NotificationManagerCompat.from(DetectorActivity.this);
-                            int notificationId = 1;
-                            notificationManager.notify(notificationId, builder.build());
+                            // Create a notification manager object
+                            NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+                            notificationManager.createNotificationChannel(channel);
+
+                            // Show the notification
+                            notificationManager.notify(1232412, builder.build());
+
                         }else if(status.equals("over")){
                             Toast.makeText(DetectorActivity.this, "You already have in and out.", Toast.LENGTH_LONG).show();
-                            NotificationCompat.Builder builder = new NotificationCompat.Builder(DetectorActivity.this)
+
+                            // Create a notification channel object
+                            NotificationChannel channel = new NotificationChannel(CHANNEL_ID, "Channel Name", NotificationManager.IMPORTANCE_DEFAULT);
+                            channel.setDescription("Channel Description");
+
+                            // Create a notification builder object
+                            NotificationCompat.Builder builder = new NotificationCompat.Builder(DetectorActivity.this, CHANNEL_ID)
                                     .setSmallIcon(R.drawable.logo)
-                                    .setContentTitle("Information")
+                                    .setContentTitle("Information!")
                                     .setContentText("You already have in and out.")
                                     .setPriority(NotificationCompat.PRIORITY_DEFAULT);
 
-                            NotificationManagerCompat notificationManager = NotificationManagerCompat.from(DetectorActivity.this);
-                            int notificationId = 1;
-                            notificationManager.notify(notificationId, builder.build());
+                            // Create a notification manager object
+                            NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+                            notificationManager.createNotificationChannel(channel);
+
+                            // Show the notification
+                            notificationManager.notify(55151, builder.build());
+
                         }else{
                             Toast.makeText(DetectorActivity.this, "Error.", Toast.LENGTH_LONG).show();
                         }

@@ -4,6 +4,6 @@
     <string name="title_dashboard">Dashboard</string>
     <string name="title_notifications">Notifications</string>
     <string name="title_attendance">Attendance</string>
-    <string name="api_link">http://192.168.1.14/</string>
+    <string name="api_link">http://192.168.2.176/</string>
     <string name="tfe_od_camera_error" translation_description="Error regarding camera support[CHAR_LIMIT=40]">This device doesn\'t support Camera2 API.</string>
 </resources>

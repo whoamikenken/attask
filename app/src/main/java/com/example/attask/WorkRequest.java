@@ -1,6 +1,8 @@
 package com.example.attask;
 
 import android.app.DatePickerDialog;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -18,6 +20,7 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.NotificationCompat;
 
 import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.Request;
@@ -42,6 +45,8 @@ import java.util.Locale;
 public class WorkRequest extends AppCompatActivity implements View.OnClickListener{
 
     private static final int PICK_FILE_REQUEST = 0xF0F0;
+    private static final String CHANNEL_ID = "r21421124";
+
     Button submit, uploadButton;
     private EditText purpose, dateTxt, workdone;
     private byte[] fileBytes;
@@ -141,7 +146,52 @@ public class WorkRequest extends AppCompatActivity implements View.OnClickListen
             JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, backendURL, postData, new Response.Listener<JSONObject>() {
                 @Override
                 public void onResponse(JSONObject response) {
+                    try {
+                        String status = response.getString("status");
+                        if(status.equals("over")){
 
+                            Toast.makeText(WorkRequest.this, "You already submitted task today", Toast.LENGTH_LONG).show();
+
+                            NotificationChannel channel = new NotificationChannel(CHANNEL_ID, "Channel Name", NotificationManager.IMPORTANCE_DEFAULT);
+                            channel.setDescription("Channel Description");
+
+                            // Create a notification builder object
+                            NotificationCompat.Builder builder = new NotificationCompat.Builder(WorkRequest.this, CHANNEL_ID)
+                                    .setSmallIcon(R.drawable.logo)
+                                    .setContentTitle("Info!")
+                                    .setContentText("You already submitted task today.")
+                                    .setPriority(NotificationCompat.PRIORITY_DEFAULT);
+
+                            // Create a notification manager object
+                            NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+                            notificationManager.createNotificationChannel(channel);
+
+                            // Show the notification
+                            notificationManager.notify(41251, builder.build());
+                        }else{
+                            Toast.makeText(WorkRequest.this, "Task Request Submitted", Toast.LENGTH_LONG).show();
+
+                            NotificationChannel channel = new NotificationChannel(CHANNEL_ID, "Channel Name", NotificationManager.IMPORTANCE_DEFAULT);
+                            channel.setDescription("Channel Description");
+
+                            // Create a notification builder object
+                            NotificationCompat.Builder builder = new NotificationCompat.Builder(WorkRequest.this, CHANNEL_ID)
+                                    .setSmallIcon(R.drawable.logo)
+                                    .setContentTitle("Success!")
+                                    .setContentText("Task Request Submitted.")
+                                    .setPriority(NotificationCompat.PRIORITY_DEFAULT);
+
+                            // Create a notification manager object
+                            NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+                            notificationManager.createNotificationChannel(channel);
+
+                            // Show the notification
+                            notificationManager.notify(5156, builder.build());
+                        }
+
+                    } catch (JSONException e) {
+                        throw new RuntimeException(e);
+                    }
                 }
             }, new Response.ErrorListener() {
                 @Override
@@ -156,8 +206,6 @@ public class WorkRequest extends AppCompatActivity implements View.OnClickListen
                     DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
 
             requestQueue.add(jsonObjectRequest);
-
-            Toast.makeText(this, "Task Request Submitted", Toast.LENGTH_LONG).show();
 
             Intent returnBtn = new Intent(this,
                     MainActivity.class);
