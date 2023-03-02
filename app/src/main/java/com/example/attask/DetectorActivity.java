@@ -30,6 +30,8 @@ import android.widget.ImageView;
 import android.widget.Toast;
 
 import androidx.core.app.ActivityCompat;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
 import androidx.core.content.ContextCompat;
 
 import com.android.volley.DefaultRetryPolicy;
@@ -794,7 +796,7 @@ public class DetectorActivity extends CameraActivity implements ImageReader.OnIm
 
             /*initiate volley request*/
             RequestQueue requestQueue = Volley.newRequestQueue(this);
-            String backendURL = "http://at-task.herokuapp.com/api/logs";
+            String backendURL = getResources().getString(R.string.api_link)+"api/logs";
 
             JSONObject postData = new JSONObject();
             long timestampDevice = System.currentTimeMillis() / 1000;
@@ -813,7 +815,39 @@ public class DetectorActivity extends CameraActivity implements ImageReader.OnIm
             JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, backendURL, postData, new Response.Listener<JSONObject>() {
                 @Override
                 public void onResponse(JSONObject response) {
+                    try {
+                        String status = response.getString("status");
+                        String log_type = response.getString("log_type");
 
+                        if(status.equals("success")){
+                            Toast.makeText(DetectorActivity.this, "Check "+log_type+" Success", Toast.LENGTH_LONG).show();
+                            NotificationCompat.Builder builder = new NotificationCompat.Builder(DetectorActivity.this)
+                                    .setSmallIcon(R.drawable.logo)
+                                    .setContentTitle("Success!")
+                                    .setContentText("Check "+log_type+" Success")
+                                    .setPriority(NotificationCompat.PRIORITY_DEFAULT);
+
+                            NotificationManagerCompat notificationManager = NotificationManagerCompat.from(DetectorActivity.this);
+                            int notificationId = 1;
+                            notificationManager.notify(notificationId, builder.build());
+                        }else if(status.equals("over")){
+                            Toast.makeText(DetectorActivity.this, "You already have in and out.", Toast.LENGTH_LONG).show();
+                            NotificationCompat.Builder builder = new NotificationCompat.Builder(DetectorActivity.this)
+                                    .setSmallIcon(R.drawable.logo)
+                                    .setContentTitle("Information")
+                                    .setContentText("You already have in and out.")
+                                    .setPriority(NotificationCompat.PRIORITY_DEFAULT);
+
+                            NotificationManagerCompat notificationManager = NotificationManagerCompat.from(DetectorActivity.this);
+                            int notificationId = 1;
+                            notificationManager.notify(notificationId, builder.build());
+                        }else{
+                            Toast.makeText(DetectorActivity.this, "Error.", Toast.LENGTH_LONG).show();
+                        }
+
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
                 }
             }, new Response.ErrorListener() {
                 @Override
@@ -826,8 +860,6 @@ public class DetectorActivity extends CameraActivity implements ImageReader.OnIm
                     DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
                     DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
             requestQueue.add(jsonObjectRequest);
-
-            Toast.makeText(this, "Check In Success", Toast.LENGTH_LONG).show();
 
             finish();
         } catch (Exception e) {

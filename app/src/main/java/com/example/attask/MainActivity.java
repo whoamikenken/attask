@@ -60,24 +60,27 @@ public class MainActivity extends AppCompatActivity {
             Lat = location.getLatitude();
             Long = location.getLongitude();
         }
+
         SharedPreferences sharedPreferences = getSharedPreferences("attasksession", Context.MODE_PRIVATE);
         String paraLat = sharedPreferences.getString("latitude", null);
         String paraLong = sharedPreferences.getString("longitude", null);
 
-        Location targetLocation = new Location("");
-        targetLocation.setLatitude(Double.parseDouble(paraLat));
-        targetLocation.setLongitude(Double.parseDouble(paraLong));
 
-        float distance = location.distanceTo(targetLocation);
-        if (distance <= 1609.34) {
-            // User is within 1 mile of target location
-        }else{
-            Toast toast =
-                    Toast.makeText(
-                            getApplicationContext(), "You're not within work location", Toast.LENGTH_SHORT);
-            toast.show();
+        if(paraLat != null){
+            Location targetLocation = new Location("");
+            targetLocation.setLatitude(Double.parseDouble(paraLat));
+            targetLocation.setLongitude(Double.parseDouble(paraLong));
+
+            float distance = location.distanceTo(targetLocation);
+            if (distance <= 1609.34) {
+                // User is within 1 mile of target location
+            }else{
+                Toast toast =
+                        Toast.makeText(
+                                getApplicationContext(), "You're not within work location", Toast.LENGTH_SHORT);
+                toast.show();
+            }
         }
-
     }
 
     void loadImage()

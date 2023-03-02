@@ -122,7 +122,7 @@ public class WorkRequest extends AppCompatActivity implements View.OnClickListen
 
             /*initiate volley request*/
             RequestQueue requestQueue = Volley.newRequestQueue(this);
-            String backendURL = "http://at-task.herokuapp.com/api/task";
+            String backendURL = getResources().getString(R.string.api_link)+"api/task";
 
             JSONObject postData = new JSONObject();
             long timestampDevice = System.currentTimeMillis() / 1000;
